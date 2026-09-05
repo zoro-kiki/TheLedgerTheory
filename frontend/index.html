@@ -3,211 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlockLoyalty - Enterprise Retail Ledger Client</title>
+    <title>BlockLoyalty - Web3 POS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        * { box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f1f5f9; color: #0f172a; padding: 30px 15px; }
-        .container { max-width: 950px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); color: white; padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 25px; box-shadow: 0 10px 25px -5px rgba(29, 78, 216, 0.3); }
-        .header h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
-        .header p { opacity: 0.9; font-size: 14px; margin-top: 6px; }
-        .status-badge { background: #dcfce7; color: #15803d; padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 600; display: inline-block; margin-top: 12px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        @media(max-width: 768px) { .grid { grid-template-columns: 1fr; } }
-        .card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-        .card h3 { font-size: 16px; color: #1e293b; margin-bottom: 18px; border-left: 4px solid #2563eb; padding-left: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #334155; background: #fff; }
-        input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        button { width: 100%; background: #2563eb; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 5px; }
-        button:hover { background: #1d4ed8; }
-        .btn-redeem { background: #10b981; }
-        .btn-redeem:hover { background: #059669; }
-        .logs-card { max-height: 180px; overflow-y: auto; background: #0f172a; color: #38bdf8; font-family: monospace; padding: 15px; border-radius: 8px; font-size: 13px; line-height: 1.6; }
-        .search-box { display: flex; gap: 10px; }
-        .search-box input { flex: 1; }
-        .search-box button { width: auto; margin-top: 0; padding: 0 20px; background: #475569; }
-        .search-box button:hover { background: #334155; }
-        .profile-display { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 13px; display: none; }
-        
-        /* Modal Style for OTP Simulation */
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .modal-content h4 { margin-bottom: 10px; color: #1e293b; }
-        .modal-content p { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+        * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
+        body { background: #f1f5f9; padding: 20px; color: #0f172a; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .btn { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; }
+        .logs { background: #0f172a; color: #38bdf8; padding: 15px; border-radius: 8px; font-family: monospace; height: 150px; overflow-y: auto; margin-top: 10px; }
     </style>
 </head>
 <body>
-
-<!-- OTP Simulation Modal Window -->
-<div id="otpModal" class="modal">
-    <div class="modal-content">
-        <h4>🔒 Customer Security Verification</h4>
-        <p id="otpPrompt">Enter the 4-digit OTP sent to customer's mobile number to sign transaction block.</p>
-        <div class="form-group">
-            <input type="text" id="otpInput" placeholder="Enter 1234 (Demo OTP)" style="text-align: center; font-size: 18px; letter-spacing: 5px;" maxlength="4">
-        </div>
-        <button onclick="verifyAndProceed()">Confirm & Authorize Transaction</button>
-    </div>
-</div>
-
 <div class="container">
-    <div class="header">
-        <h1>BlockLoyalty - Point of Sale Terminal</h1>
-        <p>Decentralized Middleware Cryptographic Reward Ledger Engine</p>
-        <div class="status-badge">🟢 Node Status: Live Simulation Engine Connected</div>
+    <div class="card" style="text-align: center; background: #1e3a8a; color: white;">
+        <h2>BlockLoyalty - Web3 POS Terminal</h2>
+        <button class="btn" id="connBtn" onclick="connect()" style="width: auto; background: #10b981; margin-top: 10px;">Connect MetaMask</button>
     </div>
 
-    <!-- Step 1: Counter Agent Query Console -->
-    <div class="card" style="margin-bottom: 20px;">
-        <h3>1. Retail Billing Counter Lookup</h3>
-        <div class="form-group">
-            <label>Scan / Enter Customer Mobile Number</label>
-            <div class="search-box">
-                <input type="text" id="searchMobile" placeholder="e.g. 9876543210 or 8765432109">
-                <button onclick="lookupCustomer()">Search Ledger</button>
-            </div>
-        </div>
-        <div class="profile-display" id="customerProfile">
-            <!-- Dynamic Injection Profile Data -->
-        </div>
-    </div>
-
-    <div class="grid">
-        <!-- Billing / Allocation Block -->
-        <div class="card">
-            <h3>2. Billing Settlement (Issue Rewards)</h3>
-            <div class="form-group">
-                <label>Final Cart Bill Amount (INR)</label>
-                <input type="number" id="billAmount" placeholder="Enter total purchase value (e.g. 2500)" oninput="calculatePoints()">
-            </div>
-            <div class="form-group">
-                <label>Calculated Loyalty Points Reward (1 Token per 100 INR)</label>
-                <input type="text" id="calculatedPoints" value="0 BLT" disabled style="background:#f1f5f9; font-weight:700; color:#2563eb;">
-            </div>
-            <button onclick="triggerAction('reward')">Settle Bill & Mint Tokens</button>
-        </div>
-
-        <!-- Redemption Processing Panel -->
-        <div class="card">
-            <h3>3. Instant Point Redemption</h3>
-            <div class="form-group">
-                <label>Available Balance for Selection</label>
-                <input type="text" id="currentPointsView" value="No Customer Queried" disabled style="background:#f1f5f9;">
-            </div>
-            <div class="form-group">
-                <label>Points to Burn for Discount (1 BLT = 1 INR Discount)</label>
-                <input type="number" id="burnAmount" placeholder="Enter points amount to redeem">
-            </div>
-            <button class="btn-redeem" onclick="triggerAction('redeem')">Apply Discount & Burn Points</button>
-        </div>
-    </div>
-
-    <!-- System Diagnostic Logs -->
     <div class="card">
-        <h3>Blockchain Node EVM Output Terminal</h3>
-        <div class="logs-card" id="consoleLogs">
-            [SYSTEM] Cryptographic system active. Wallet database indices successfully mapped to simulated network accounts. Ready for cashier input strings...
-        </div>
+        <h3>1. Account Lookup</h3>
+        <input type="text" id="targetAddr" placeholder="Paste Wallet Address (0x...)">
+        <button class="btn" onclick="checkBal()">Check Live Balance</button>
+        <div id="balView" style="margin-top: 10px; font-weight: bold; color: #10b981;"></div>
+    </div>
+
+    <div class="card">
+        <h3>2. Mint Rewards</h3>
+        <input type="number" id="billAmt" placeholder="Enter Bill Amount (INR)">
+        <button class="btn" onclick="reward()">Mint Tokens</button>
+    </div>
+
+    <div class="card">
+        <h3>Console Output</h3>
+        <div class="logs" id="logBox">Ready...</div>
     </div>
 </div>
 
 <script>
-    // System Mock Database Mapping Phone numbers to real EVM cryptographic keys
-    const database = {
-        "9876543210": { name: "Customer Alpha", address: "0xAb843F64d9C6d1Ecf9b849Ae677dD3315835cb2", balance: 120 },
-        "8765432109": { name: "Customer Beta", address: "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02d1", balance: 45 }
-    };
+    const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+    const CONTRACT_ABI = [
+        "function balanceOf(address account) view returns (uint256)",
+        "function rewardCustomer(address _customer, uint256 _points) returns (bool)"
+    ];
 
-    let activeMobile = null;
-    let pendingAction = null;
+    let provider, signer, contract;
 
-    function logAction(message) {
-        const logBox = document.getElementById('consoleLogs');
-        const timestamp = new Date().toLocaleTimeString();
-        logBox.innerHTML += `<br>[${timestamp}] ${message}`;
-        logBox.scrollTop = logBox.scrollHeight;
+    function log(msg) {
+        const box = document.getElementById('logBox');
+        box.innerHTML += `<br>[${new Date().toLocaleTimeString()}] ${msg}`;
+        box.scrollTop = box.scrollHeight;
     }
 
-    function lookupCustomer() {
-        const mobile = document.getElementById('searchMobile').value.trim();
-        const profile = document.getElementById('customerProfile');
-        
-        if (database[mobile]) {
-            activeMobile = mobile;
-            const client = database[mobile];
-            profile.style.display = "block";
-            profile.innerHTML = `<strong>Account Name:</strong> ${client.name}<br>
-                                 <strong>Blockchain Mapped Wallet:</strong> <code style='color:#64748b;'>${client.address}</code><br>
-                                 <strong>Verified Immutable Balance:</strong> <span style='font-weight:700; color:#10b981;'>${client.balance} BLT</span>`;
-            
-            document.getElementById('currentPointsView').value = `${client.balance} BLT Available`;
-            logAction(`🔍 [Query State] Found phone records mapping to EVM address registry context: ${client.address}`);
-        } else {
-            activeMobile = null;
-            profile.style.display = "block";
-            profile.innerHTML = "<span style='color:#ef4444;'>⚠️ Registration Error: No matching customer profile or crypto records discovered on this node.</span>";
-            logAction(`❌ [Query Reverted] Input mobile identifier does not resolve to an active secure storage slot.`);
-        }
+    async function connect() {
+        if (!window.ethereum) return alert("MetaMask missing!");
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        const addr = await signer.getAddress();
+        document.getElementById('connBtn').innerText = "Connected: " + addr.substring(0, 6) + "...";
+        log("MetaMask Connected: " + addr);
     }
 
-    function calculatePoints() {
-        const bill = parseFloat(document.getElementById('billAmount').value) || 0;
-        const tokens = Math.floor(bill / 100); // 1 token per 100 rupees
-        document.getElementById('calculatedPoints').value = tokens + " BLT";
+    async function checkBal() {
+        if (!contract) return alert("Connect MetaMask first!");
+        const addr = document.getElementById('targetAddr').value.trim();
+        const bal = await contract.balanceOf(addr);
+        document.getElementById('balView').innerText = "Balance: " + bal.toString() + " BLT";
+        log("Balance Query: " + bal.toString() + " BLT");
     }
 
-    function triggerAction(type) {
-        if (!activeMobile) {
-            alert("First query a valid customer via mobile registry search framework!");
-            return;
-        }
-        pendingAction = type;
-        document.getElementById('otpInput').value = "";
-        document.getElementById('otpModal').style.display = "flex";
-        logAction(`🔒 [Security Trigger] Transaction authorization sequence initiated. Dispatched OTP code simulation trace.`);
-    }
-
-    function verifyAndProceed() {
-        const otp = document.getElementById('otpInput').value;
-        if (otp !== "1234") {
-            alert("Invalid OTP signature matrix! Authorization revoked.");
-            logAction("⚠️ [Auth Failed] Cryptographic signature check rejected the entry parameter validation.");
-            return;
-        }
-
-        document.getElementById('otpModal').style.display = "none";
-        const client = database[activeMobile];
-
-        if (pendingAction === 'reward') {
-            const bill = parseFloat(document.getElementById('billAmount').value) || 0;
-            const tokens = Math.floor(bill / 100);
-            if (tokens <= 0) return;
-
-            client.balance += tokens;
-            logAction(`🚀 [Solidity Tx Call] Executing 'rewardCustomer(${client.address}, ${tokens})'. Modifying global state supply structures...`);
-            logAction(`📦 [Block Emitted] Event 'Transfer(address(0), ${client.address}, ${tokens})' signed into block transaction logs.`);
-        } 
-        else if (pendingAction === 'redeem') {
-            const tokens = parseInt(document.getElementById('burnAmount').value) || 0;
-            if (tokens <= 0) return;
-            if (client.balance < tokens) {
-                logAction(`❌ [VM Exception] Reverted: Insufficient active balance for processing redeem request.`);
-                alert("Insufficient tokens available on ledger memory allocation!");
-                return;
-            }
-
-            client.balance -= tokens;
-            logAction(`🔥 [Solidity Tx Call] Executing 'redeemPoints(${tokens})'. Burning tokens from active registry context...`);
-            logAction(`📦 [Block Emitted] Dispatched ${tokens} BLT to secure destruction target index address(0).`);
-        }
-
-        // Refresh views
-        lookupCustomer();
-        document.getElementById('billAmount').value = "";
-        document.getElementById('calculatedPoints').value = "0 BLT";
-        document.getElementById('burnAmount').value = "";
+    async function reward() {
+        if (!contract) return alert("Connect MetaMask first!");
+        const addr = document.getElementById('targetAddr').value.trim();
+        const bill = parseFloat(document.getElementById('billAmt').value) || 0;
+        const pts = Math.floor(bill / 100);
+        log("Sending Tx rewardCustomer(" + addr + ", " + pts + ")...");
+        const tx = await contract.rewardCustomer(addr, pts);
+        log("Tx Hash: " + tx.hash + ". Mining...");
+        await tx.wait();
+        log("🎉 Mint Confirmed!");
+        checkBal();
     }
 </script>
 </body>
